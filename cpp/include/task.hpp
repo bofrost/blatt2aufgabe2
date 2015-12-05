@@ -21,6 +21,12 @@
 // #include <atomic>
 
 class Task {
+	struct inputActionPair{
+		std::function<bool (Task*)> guard;
+		std::function<void (Task*)> command;
+	};
+
+	std::vector<inputActionPair> guardedCommands;
 public:
 	/**
 	 * Konstruktor
@@ -32,12 +38,36 @@ public:
 		this->out = out;
 	}
 
+	void addInputAction(std::function<bool (Task*)> guard, std::function<void (Task*)> command){
+		guardedCommands.push_back(inputActionPair{guard, command});
+	}
+
+	//evaluates all guarded commands and executes all true ones in a random order
+	void execute(){
+		std::srand ( unsigned ( std::time(0) ) );
+		//holds indices of guards evaluated to true
+		std::vector<int> trueGuards;
+		//evaluate guards
+		for(int i=0; i<guardedCommands.size(); i++){
+			if(guardedCommands[i].guard(this)){
+				trueGuards.push_back(i);
+			}
+		}
+		std::random_shuffle(trueGuards.begin(), trueGuards.end());
+		for(int i=0; i<trueGuards.size(); i++){
+			guardedCommands[trueGuards[i]].command(this); //execute commands
+		}
+	}
+
+	virtual void init(){};
+
 	/**
 	 * Schleife, welche Verbindungen und Nachrichten annimmt
 	 * @param port Portnummer für den Server
 	 */
 	virtual void loop() {
 		std::cout << "gestartet" << std::endl;
+		init();
 		fd_set fds;
 		int max = 0;
 		while(true)
@@ -68,7 +98,9 @@ protected:
 	std::vector<int> in;
 	std::vector<int> out;
 
-
+	//Kommunikation mit den InputActionPairs über diese Variablen? (vorerst)
+	int origin; //aus welcher Kante kommt die Nachricht
+	int message;    //die nachricht //TODO int -> Message
 
 	/**
 	 * Behandlung der Nachrichten
@@ -77,14 +109,15 @@ protected:
 	 */
 	void handleMessage(int i) {
 		std::cout << "handleMessage" << std::endl;
-		char buffer[255];
+		//char buffer[255];
 		int n;
-		n = read(i,buffer,sizeof buffer);
+		n = read(i,&message,sizeof message);
 		if (n < 0) {
 			close(i);
 			error("ERROR reading from socket");
 		}
-		std::cout << buffer << std::endl;
+		std::cout << message << std::endl;
+		execute();
 		return;
 	}
 

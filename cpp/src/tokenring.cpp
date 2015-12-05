@@ -8,7 +8,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graphviz.hpp>
 
-enum Msg{LOAD, TOKEN};
+enum Msg{NIL, LOAD, TOKEN};
 
 #include "server.hpp"
 #include "message.hpp"
