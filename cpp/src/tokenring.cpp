@@ -8,9 +8,13 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graphviz.hpp>
 
+enum Msg{LOAD, TOKEN};
+
 #include "server.hpp"
 #include "message.hpp"
 #include "task.hpp"
+#include "ringNode.hpp"
+#include "loadGenerator.hpp"
 #include "counter.hpp"
 
 using namespace boost;
@@ -43,9 +47,9 @@ template<class Graph> struct exercise_vertex {
 			Vertex src = source(e, g), targ = target(e, g);
 			std::cout << indexE(e) << ":(" << index[src] << "," << index[targ] << ") ";
 			if(index[src]<index[targ])
-				out.push_back(socket_pairs[indexE(e)].first);
-			else
 				out.push_back(socket_pairs[indexE(e)].second);
+			else
+				out.push_back(socket_pairs[indexE(e)].first);
 		}
 		std::cout << std::endl;
 		std::cout << "in-edges: ";
@@ -56,11 +60,16 @@ template<class Graph> struct exercise_vertex {
 			Vertex src = source(e, g), targ = target(e, g);
 			std::cout << "(" << index[src] << "," << index[targ] << ") ";
 			if(index[src]<index[targ])
-				out.push_back(socket_pairs[indexE(e)].first);
+				in.push_back(socket_pairs[indexE(e)].first);
 			else
-				out.push_back(socket_pairs[indexE(e)].second);
+				in.push_back(socket_pairs[indexE(e)].second);
 		}
-		Task *task = new Task(in, out);
+		Task *task;
+		if(index(v)==0)
+			task = new LoadGenerator(in, out);
+		else
+			task = new RingNode(in, out, index(v)==1);
+		 //= new Task(in, out);
 		threads[index(v)]=std::thread(&Task::loop, task);
 		//t.join();
 

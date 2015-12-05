@@ -33,21 +33,11 @@ public:
 	}
 
 	/**
-	 * Destruktor
-	 */
-	~Task() {
-	}
-
-
-private:
-	std::vector<int> in;
-	std::vector<int> out;
-
-	/**
 	 * Schleife, welche Verbindungen und Nachrichten annimmt
 	 * @param port Portnummer für den Server
 	 */
-	void loop() {
+	virtual void loop() {
+		std::cout << "gestartet" << std::endl;
 		fd_set fds;
 		int max = 0;
 		while(true)
@@ -68,11 +58,25 @@ private:
 	}
 
 	/**
+	 * Destruktor
+	 */
+	~Task() {
+	}
+
+
+protected:
+	std::vector<int> in;
+	std::vector<int> out;
+
+
+
+	/**
 	 * Behandlung der Nachrichten
 	 * Zur Zeit nur in die standart ausgabe schreiben
 	 * @param buffer Puffer mit Nachricht
 	 */
 	void handleMessage(int i) {
+		std::cout << "handleMessage" << std::endl;
 		char buffer[255];
 		int n;
 		n = read(i,buffer,sizeof buffer);
