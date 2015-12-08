@@ -15,8 +15,11 @@ public:
 	~Counter() {}
 
 	unsigned int getValue() {
+		return (_value);
+	}
+
+	void incValue() {
 		++_value;
-		return (_value - 1);
 	}
 
 	void reset() {
